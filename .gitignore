@@ -1,0 +1,15 @@
+# Build artifacts (Zephyr/west)
+firmware/build/
+firmware/tests/*/build*/
+*.o
+*.a
+*.elf
+*.hex
+*.bin
+
+# Third-party reference image (copyright: beachyuk.com — see specs/01-hardware.md for link)
+/ProMicro_pinout.png
+
+# Misc
+/tmp/
+*.log
