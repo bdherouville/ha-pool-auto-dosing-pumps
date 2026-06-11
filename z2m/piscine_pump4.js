@@ -108,8 +108,11 @@ const tzDose = {
     convertSet: async (entity, key, value, meta) => {
         if (value !== 'START') return;
         const ep = meta.endpoint_name;
-        const duration_s = Number(meta.state[`dose_duration_${ep}`]) || 60;
-        const level = Number(meta.state[`speed_${ep}`]) || 254;
+        const durationState = Number(meta.state[`dose_duration_${ep}`]);
+        const duration_s = Number.isFinite(durationState) && durationState >= 1 ? durationState : 60;
+        // Fall back to 254 only when speed was never set; an explicit 0 is honoured (= stop)
+        const levelState = Number(meta.state[`speed_${ep}`]);
+        const level = Number.isFinite(levelState) ? levelState : 254;
         const dirState = meta.state[`direction_${ep}`];
         const direction = dirState === 'reverse' ? 1 : 0;
         await entity.command('piscinePump', 'startDose', {duration_s, level, direction}, {

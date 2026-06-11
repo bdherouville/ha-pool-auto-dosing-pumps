@@ -542,7 +542,7 @@ static void zcl_device_cb(zb_bufid_t bufid)
 	zb_zcl_device_callback_param_t *device_cb_param =
 		ZB_BUF_GET_PARAM(bufid, zb_zcl_device_callback_param_t);
 	zb_uint8_t ep = device_cb_param->endpoint;
-	zb_uint8_t cluster_id = device_cb_param->cb_param.set_attr_value_param.cluster_id;
+	zb_uint16_t cluster_id = device_cb_param->cb_param.set_attr_value_param.cluster_id;
 	zb_uint16_t attr_id = device_cb_param->cb_param.set_attr_value_param.attr_id;
 	uint8_t pump_idx = ep_to_pump_idx(ep);
 
@@ -577,9 +577,11 @@ static void zcl_device_cb(zb_bufid_t bufid)
 				pump_ep_ctx_t *ep_ctx = get_ep_ctx(ep);
 				if (ep_ctx) {
 					ep_ctx->level_control_attr.current_level = new_level;
-					/* If pump is active, re-apply with new level */
+					/* If pump is active, re-apply with new level,
+					 * keeping the remaining dose time */
 					if (dosing_active(pump_idx)) {
-						dosing_run(pump_idx, new_level, ep_ctx->direction);
+						dosing_start(pump_idx, dosing_remaining(pump_idx),
+							     new_level, ep_ctx->direction);
 					}
 				}
 			}
@@ -593,9 +595,12 @@ static void zcl_device_cb(zb_bufid_t bufid)
 				LOG_INF("EP%d direction set to %d", ep, value);
 				if (ep_ctx) {
 					ep_ctx->direction = value;
-					/* Apply immediately if running (safe reverse in pump_pwm) */
+					/* Apply immediately if running (safe reverse in
+					 * pump_pwm), keeping the remaining dose time */
 					if (dosing_active(pump_idx)) {
-						dosing_run(pump_idx, ep_ctx->level_control_attr.current_level, value);
+						dosing_start(pump_idx, dosing_remaining(pump_idx),
+							     ep_ctx->level_control_attr.current_level,
+							     value);
 					}
 				}
 			} else if (attr_id == PUMP_ATTR_FILL_TIME_1L_MIN_S ||
@@ -624,7 +629,9 @@ static void zcl_device_cb(zb_bufid_t bufid)
 		if (ep_ctx) {
 			ep_ctx->level_control_attr.current_level = new_level;
 			if (dosing_active(pump_idx)) {
-				dosing_run(pump_idx, new_level, ep_ctx->direction);
+				/* Keep the remaining dose time */
+				dosing_start(pump_idx, dosing_remaining(pump_idx),
+					     new_level, ep_ctx->direction);
 			}
 		}
 		break;
