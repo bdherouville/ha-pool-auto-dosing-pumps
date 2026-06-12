@@ -84,11 +84,10 @@ const tzSpeed = {
         const level = pctToLevel(pct);
         const direction = pct < 0 ? 1 : 0;
         const ep = meta.endpoint_name;
-        // Update direction first (applies live; firmware reverses with dead time)
-        const prevDir = meta.state[`direction_${ep}`] === 'reverse' ? 1 : 0;
-        if (direction !== prevDir) {
-            await entity.write('piscinePump', {direction}, {manufacturerCode: MANUFACTURER_CODE});
-        }
+        // Always write direction first (idempotent; firmware applies live with
+        // dead time only when it actually changes). Comparing against cached
+        // state is unreliable after restarts/reflashes.
+        await entity.write('piscinePump', {direction}, {manufacturerCode: MANUFACTURER_CODE});
         await entity.command('genLevelCtrl', 'moveToLevel', {level, transtime: 0});
         return {state: {
             [`speed_${ep}`]: (pct < 0 ? -1 : 1) * levelToPct(level),
