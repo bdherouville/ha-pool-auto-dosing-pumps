@@ -59,13 +59,17 @@ const fzPiscinePump = {
     },
 };
 
-// CurrentLevel reports -> speed_<pumpN>
+// Speed is exposed as 0-100 %; on the wire it is the ZCL level 0-254
+const pctToLevel = (pct) => Math.round(Math.max(0, Math.min(100, Number(pct))) * 254 / 100);
+const levelToPct = (level) => Math.round(Number(level) * 100 / 254);
+
+// CurrentLevel reports -> speed_<pumpN> (in %)
 const fzSpeed = {
     cluster: 'genLevelCtrl',
     type: ['attributeReport', 'readResponse'],
     convert: (model, msg, publish, options, meta) => {
         if (msg.data.currentLevel !== undefined) {
-            return {[`speed_pump${msg.endpoint.ID}`]: msg.data.currentLevel};
+            return {[`speed_pump${msg.endpoint.ID}`]: levelToPct(msg.data.currentLevel)};
         }
     },
 };
@@ -73,9 +77,9 @@ const fzSpeed = {
 const tzSpeed = {
     key: ['speed'],
     convertSet: async (entity, key, value, meta) => {
-        const level = Math.max(0, Math.min(254, Number(value)));
+        const level = pctToLevel(value);
         await entity.command('genLevelCtrl', 'moveToLevel', {level, transtime: 0});
-        return {state: {[`speed_${meta.endpoint_name}`]: level}};
+        return {state: {[`speed_${meta.endpoint_name}`]: levelToPct(level)}};
     },
     convertGet: async (entity, key, meta) => {
         await entity.read('genLevelCtrl', ['currentLevel']);
@@ -110,9 +114,9 @@ const tzDose = {
         const ep = meta.endpoint_name;
         const durationState = Number(meta.state[`dose_duration_${ep}`]);
         const duration_s = Number.isFinite(durationState) && durationState >= 1 ? durationState : 60;
-        // Fall back to 254 only when speed was never set; an explicit 0 is honoured (= stop)
-        const levelState = Number(meta.state[`speed_${ep}`]);
-        const level = Number.isFinite(levelState) ? levelState : 254;
+        // Fall back to full speed only when speed was never set; an explicit 0 % is honoured (= stop)
+        const pctState = Number(meta.state[`speed_${ep}`]);
+        const level = Number.isFinite(pctState) ? pctToLevel(pctState) : 254;
         const dirState = meta.state[`direction_${ep}`];
         const direction = dirState === 'reverse' ? 1 : 0;
         await entity.command('piscinePump', 'startDose', {duration_s, level, direction}, {
@@ -148,8 +152,8 @@ const tzFillTime1lMax = {
 
 const pumpExposes = (ep) => [
     e.switch().withEndpoint(ep),
-    exposes.numeric('speed', ea.ALL).withEndpoint(ep).withValueMin(0).withValueMax(254)
-        .withDescription('Pump speed (PWM duty, 0-254; below 51 the pump stops)'),
+    exposes.numeric('speed', ea.ALL).withEndpoint(ep).withValueMin(0).withValueMax(100).withUnit('%')
+        .withDescription('Pump speed (PWM duty %; below 20% the pump stops)'),
     exposes.enum('direction', ea.ALL, ['forward', 'reverse']).withEndpoint(ep)
         .withDescription('Rotation direction, applied on next start'),
     exposes.numeric('dose_duration', ea.STATE_SET).withEndpoint(ep).withValueMin(1).withValueMax(3600)

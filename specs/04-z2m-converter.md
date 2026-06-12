@@ -24,7 +24,7 @@ Use `definition.extend`-less custom `fromZigbee`/`toZigbee` with `meta: {multiEn
 | Expose | Type | Maps to |
 |--------|------|---------|
 | `switch` (state) | binary | On/Off cluster |
-| `speed` | numeric 0–254 | Level Control CurrentLevel |
+| `speed` | numeric 0–100 % (converter scales to ZCL level 0–254; below 20 % the firmware stops the pump) | Level Control CurrentLevel |
 | `direction` | enum [forward, reverse] | 0xFC00 attr 0x0000 |
 | `dose_duration` | numeric 1–3600 s (settable) | payload for startDose |
 | `dose_remaining` | numeric, read-only | 0xFC00 attr 0x0002 |
