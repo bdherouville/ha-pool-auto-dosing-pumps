@@ -29,7 +29,7 @@ Attributes (all reportable):
 | `direction` | 0x0000 | enum8 | 0 = forward, 1 = reverse. Writable. Applied immediately: a running pump restarts in the new direction (pump_pwm enforces stop + ≥50 ms dead time). |
 | `dose_duration_s` | 0x0001 | uint16 | Last requested dose duration (RO). |
 | `dose_remaining_s` | 0x0002 | uint16 | Seconds left in current dose, 0 when idle. Reported every 1 s while dosing and on completion. |
-| `fill_time_1l_min_s` | 0x0003 | uint16 | Calibration: seconds to pump 1 L at **minimum running speed** (duty 51). Writable, persisted across reboots. 0 = uncalibrated. |
+| `fill_time_1l_min_s` | 0x0003 | uint16 | Calibration: seconds to pump 1 L at **minimum running speed** (level 1 = 50% duty). Writable, persisted across reboots. 0 = uncalibrated. |
 | `fill_time_1l_max_s` | 0x0004 | uint16 | Calibration: seconds to pump 1 L at **maximum speed** (duty 254). Writable, persisted across reboots. 0 = uncalibrated. |
 
 Commands (client → server):

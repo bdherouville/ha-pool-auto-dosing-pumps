@@ -12,7 +12,7 @@
 2. **PWM**: command pump 1 forward 50% — pin A shows 4 kHz / ~50% duty, pin B low. Reverse — swapped, with ≥50 ms both-low gap. Motor speed must visibly differ between duty 80/150/254 (catches L298N switching-loss saturation, see spec 01).
 3. **Dose timing**: 60 s dose, stopwatch; error < 1 s. `dose_remaining_s` counts down in RTT log.
 4. **Abort**: Off mid-dose stops immediately, remaining → 0.
-5. **Min duty**: level 30 (<51) → pump stays stopped.
+5. **Speed range**: speed 0 % → pump stopped; speed 1 % → pump just turns (≈50 % duty on pin); speed 100 % → full speed. 1 %/50 %/100 % must give three visibly different speeds.
 
 ## Network tests
 

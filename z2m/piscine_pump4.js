@@ -153,7 +153,7 @@ const tzFillTime1lMax = {
 const pumpExposes = (ep) => [
     e.switch().withEndpoint(ep),
     exposes.numeric('speed', ea.ALL).withEndpoint(ep).withValueMin(0).withValueMax(100).withUnit('%')
-        .withDescription('Pump speed (PWM duty %; below 20% the pump stops)'),
+        .withDescription('Pump speed, 0% = stop; 1-100% spans the motor usable range'),
     exposes.enum('direction', ea.ALL, ['forward', 'reverse']).withEndpoint(ep)
         .withDescription('Rotation direction, applied on next start'),
     exposes.numeric('dose_duration', ea.STATE_SET).withEndpoint(ep).withValueMin(1).withValueMax(3600)
@@ -161,7 +161,7 @@ const pumpExposes = (ep) => [
     exposes.numeric('dose_remaining', ea.STATE).withEndpoint(ep).withUnit('s')
         .withDescription('Seconds left in the running dose (0 = idle)'),
     exposes.numeric('fill_time_1l_min', ea.ALL).withEndpoint(ep).withValueMin(0).withValueMax(65535)
-        .withUnit('s').withDescription('Calibration: seconds to pump 1 L at minimum running speed (duty 51)'),
+        .withUnit('s').withDescription('Calibration: seconds to pump 1 L at minimum running speed (1%)'),
     exposes.numeric('fill_time_1l_max', ea.ALL).withEndpoint(ep).withValueMin(0).withValueMax(65535)
         .withUnit('s').withDescription('Calibration: seconds to pump 1 L at maximum speed (duty 254)'),
     exposes.enum('dose', ea.SET, ['START']).withEndpoint(ep)

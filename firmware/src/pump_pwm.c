@@ -81,14 +81,19 @@ int pump_set(uint8_t idx, enum pump_dir dir, uint8_t duty)
 		return -EINVAL;
 	}
 
-	/* Treat duty < 51 (20% of 254) as stop */
-	if (duty < 51) {
+	/* Level 0 = stop */
+	if (duty == 0) {
 		return pump_stop(idx);
 	}
 
-	/* Compute pulse width: duty / 254 of period
-	 * pulse = (duty * period) / 254 */
-	pulse = (uint32_t)duty * pump_specs[idx][0].period / 254;
+	/* Motors only move from ~50% duty: map level 1..254 linearly onto
+	 * 50%..100% of the period (level 1 -> 50%, level 254 -> 100%) */
+	{
+		uint32_t period = pump_specs[idx][0].period;
+		uint32_t half = period / 2;
+
+		pulse = half + (uint32_t)(duty - 1) * (period - half) / 253;
+	}
 
 	/* If currently running in opposite direction, stop, sleep, then apply */
 	if (pump_states[idx].running && pump_states[idx].dir != dir) {
