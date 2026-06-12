@@ -13,3 +13,6 @@ firmware/tests/*/build*/
 # Misc
 /tmp/
 *.log
+
+# Secrets (HA token etc.)
+.env
