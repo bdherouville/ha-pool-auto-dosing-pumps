@@ -17,7 +17,7 @@ EP1..EP4 = pumps 1..4. Identical cluster set on each endpoint, profile **HA (0x0
 | Basic | 0x0000 | EP1 only |
 | Identify | 0x0003 | standard |
 | On/Off | 0x0006 | run/stop. `Off` also aborts a dose. `On` runs at current level/direction indefinitely (capped at 3600 s by safety invariant). |
-| Level Control | 0x0008 | `CurrentLevel` 0–254 = pump speed. Changing level while running re-applies duty. |
+| Level Control | 0x0008 | `CurrentLevel` 0–254 = pump speed. Changing level while running re-applies duty (remaining dose time preserved). `Options` (0x000F) is declared with **ExecuteIfOff = 1** so MoveToLevel is accepted while the pump is off (ZCL8 3.10.2.2.8.1 would otherwise drop it); a level change while off never starts the pump. |
 | **Pump custom** | **0xFC00** (manuf. code **0x1234**) | see below |
 
 ### Custom cluster 0xFC00 (manufacturer code 0x1234)

@@ -30,6 +30,9 @@ typedef struct {
 	zb_zcl_groups_attrs_t groups_attr;
 	zb_zcl_on_off_attrs_t on_off_attr;
 	zb_zcl_level_control_attrs_t level_control_attr;
+	/* Extra Level Control attrs: Options (ExecuteIfOff) + StartUpCurrentLevel */
+	uint8_t level_options;
+	uint8_t level_start_up;
 	/* Custom pump cluster attributes */
 	uint8_t direction;
 	uint16_t dose_duration_s;
@@ -164,9 +167,11 @@ DECLARE_PUMP_EP_CUSTOM_ATTRS(4);
 		&dev_ctx.ep##n.groups_attr.name_support); \
 	ZB_ZCL_DECLARE_ON_OFF_ATTRIB_LIST(pump_on_off_list_##n, \
 		&dev_ctx.ep##n.on_off_attr.on_off); \
-	ZB_ZCL_DECLARE_LEVEL_CONTROL_ATTRIB_LIST(pump_level_control_list_##n, \
+	ZB_ZCL_DECLARE_LEVEL_CONTROL_ATTRIB_LIST_EXT(pump_level_control_list_##n, \
 		&dev_ctx.ep##n.level_control_attr.current_level, \
-		&dev_ctx.ep##n.level_control_attr.remaining_time)
+		&dev_ctx.ep##n.level_control_attr.remaining_time, \
+		&dev_ctx.ep##n.level_start_up, \
+		&dev_ctx.ep##n.level_options)
 
 /* Declare attribute lists for each endpoint */
 DECLARE_PUMP_EP_ATTRS(1);
@@ -671,6 +676,10 @@ int zb_pump_init(void)
 	/* Default to full speed so bare On works before any level is set */
 	dev_ctx.ep1.level_control_attr.current_level = 254;
 	dev_ctx.ep1.level_control_attr.remaining_time = 0;
+	/* ExecuteIfOff: accept speed changes while the pump is stopped
+	 * (ZCL8 3.10.2.2.8.1 otherwise drops MoveToLevel when OnOff=false) */
+	dev_ctx.ep1.level_options = 1U << ZB_ZCL_LEVEL_CONTROL_OPTIONS_EXECUTE_IF_OFF;
+	dev_ctx.ep1.level_start_up = 254;
 	dev_ctx.ep1.direction = PUMP_DIR_FORWARD;
 	dev_ctx.ep1.dose_duration_s = 0;
 	dev_ctx.ep1.dose_remaining_s = 0;
