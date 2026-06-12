@@ -59,17 +59,20 @@ const fzPiscinePump = {
     },
 };
 
-// Speed is exposed as 0-100 %; on the wire it is the ZCL level 0-254
-const pctToLevel = (pct) => Math.round(Math.max(0, Math.min(100, Number(pct))) * 254 / 100);
+// Speed is exposed as a signed -100..100 %: sign = direction, magnitude = speed.
+// On the wire: direction attr (0xFC00/0x0000) + ZCL level 0-254.
+const pctToLevel = (pct) => Math.round(Math.max(0, Math.min(100, Math.abs(Number(pct)))) * 254 / 100);
 const levelToPct = (level) => Math.round(Number(level) * 100 / 254);
 
-// CurrentLevel reports -> speed_<pumpN> (in %)
+// CurrentLevel reports -> speed_<pumpN> (signed % using last known direction)
 const fzSpeed = {
     cluster: 'genLevelCtrl',
     type: ['attributeReport', 'readResponse'],
     convert: (model, msg, publish, options, meta) => {
         if (msg.data.currentLevel !== undefined) {
-            return {[`speed_pump${msg.endpoint.ID}`]: levelToPct(msg.data.currentLevel)};
+            const ep = `pump${msg.endpoint.ID}`;
+            const sign = meta.state && meta.state[`direction_${ep}`] === 'reverse' ? -1 : 1;
+            return {[`speed_${ep}`]: sign * levelToPct(msg.data.currentLevel)};
         }
     },
 };
@@ -77,9 +80,20 @@ const fzSpeed = {
 const tzSpeed = {
     key: ['speed'],
     convertSet: async (entity, key, value, meta) => {
-        const level = pctToLevel(value);
+        const pct = Number(value);
+        const level = pctToLevel(pct);
+        const direction = pct < 0 ? 1 : 0;
+        const ep = meta.endpoint_name;
+        // Update direction first (applies live; firmware reverses with dead time)
+        const prevDir = meta.state[`direction_${ep}`] === 'reverse' ? 1 : 0;
+        if (direction !== prevDir) {
+            await entity.write('piscinePump', {direction}, {manufacturerCode: MANUFACTURER_CODE});
+        }
         await entity.command('genLevelCtrl', 'moveToLevel', {level, transtime: 0});
-        return {state: {[`speed_${meta.endpoint_name}`]: levelToPct(level)}};
+        return {state: {
+            [`speed_${ep}`]: (pct < 0 ? -1 : 1) * levelToPct(level),
+            [`direction_${ep}`]: direction ? 'reverse' : 'forward',
+        }};
     },
     convertGet: async (entity, key, meta) => {
         await entity.read('genLevelCtrl', ['currentLevel']);
@@ -152,10 +166,8 @@ const tzFillTime1lMax = {
 
 const pumpExposes = (ep) => [
     e.switch().withEndpoint(ep),
-    exposes.numeric('speed', ea.ALL).withEndpoint(ep).withValueMin(0).withValueMax(100).withUnit('%')
-        .withDescription('Pump speed, 0% = stop; 1-100% spans the motor usable range'),
-    exposes.enum('direction', ea.ALL, ['forward', 'reverse']).withEndpoint(ep)
-        .withDescription('Rotation direction, applied on next start'),
+    exposes.numeric('speed', ea.ALL).withEndpoint(ep).withValueMin(-100).withValueMax(100).withUnit('%')
+        .withDescription('Signed pump speed: + forward, - reverse, 0 = stop (pause). Magnitude 1-100% spans the motor usable range'),
     exposes.numeric('dose_duration', ea.STATE_SET).withEndpoint(ep).withValueMin(1).withValueMax(3600)
         .withUnit('s').withDescription('Duration used by the next dose'),
     exposes.numeric('dose_remaining', ea.STATE).withEndpoint(ep).withUnit('s')

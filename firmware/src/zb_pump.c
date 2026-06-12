@@ -564,6 +564,32 @@ static struct settings_handler pump_settings = {
  * ============================================================================
  */
 
+/* Apply a speed (level) change. Level 0 pauses the pump but keeps the
+ * remaining run time; raising the level again resumes it (OnOff still on). */
+static void pump_apply_level(uint8_t ep, uint8_t new_level)
+{
+	pump_ep_ctx_t *ep_ctx = get_ep_ctx(ep);
+	uint8_t pump_idx = ep_to_pump_idx(ep);
+
+	if (!ep_ctx) {
+		return;
+	}
+
+	ep_ctx->level_control_attr.current_level = new_level;
+
+	if (dosing_active(pump_idx)) {
+		/* Running: re-apply, keeping the remaining time (0 pauses) */
+		dosing_start(pump_idx, dosing_remaining(pump_idx),
+			     new_level, ep_ctx->direction);
+	} else if (new_level > 0 && ep_ctx->on_off_attr.on_off) {
+		/* Paused at 0%: resume with the paused countdown, if any */
+		uint16_t rem = dosing_remaining(pump_idx);
+
+		dosing_start(pump_idx, rem ? rem : 3600,
+			     new_level, ep_ctx->direction);
+	}
+}
+
 static void zcl_device_cb(zb_bufid_t bufid)
 {
 	zb_zcl_device_callback_param_t *device_cb_param =
@@ -604,16 +630,7 @@ static void zcl_device_cb(zb_bufid_t bufid)
 			LOG_INF("EP%d Level set to %d", ep, new_level);
 
 			if (attr_id == ZB_ZCL_ATTR_LEVEL_CONTROL_CURRENT_LEVEL_ID) {
-				pump_ep_ctx_t *ep_ctx = get_ep_ctx(ep);
-				if (ep_ctx) {
-					ep_ctx->level_control_attr.current_level = new_level;
-					/* If pump is active, re-apply with new level,
-					 * keeping the remaining dose time */
-					if (dosing_active(pump_idx)) {
-						dosing_start(pump_idx, dosing_remaining(pump_idx),
-							     new_level, ep_ctx->direction);
-					}
-				}
+				pump_apply_level(ep, new_level);
 			}
 		}
 		/* Handle custom pump cluster attributes */
@@ -653,17 +670,9 @@ static void zcl_device_cb(zb_bufid_t bufid)
 	case ZB_ZCL_LEVEL_CONTROL_SET_VALUE_CB_ID: {
 		/* Move-to-Level commands arrive here, not via SET_ATTR_VALUE */
 		uint8_t new_level = device_cb_param->cb_param.level_control_set_value_param.new_value;
-		pump_ep_ctx_t *ep_ctx = get_ep_ctx(ep);
 
 		LOG_INF("EP%d Level set to %d (level-control cmd)", ep, new_level);
-		if (ep_ctx) {
-			ep_ctx->level_control_attr.current_level = new_level;
-			if (dosing_active(pump_idx)) {
-				/* Keep the remaining dose time */
-				dosing_start(pump_idx, dosing_remaining(pump_idx),
-					     new_level, ep_ctx->direction);
-			}
-		}
+		pump_apply_level(ep, new_level);
 		break;
 	}
 

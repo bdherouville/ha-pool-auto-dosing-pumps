@@ -8,7 +8,6 @@ LOG_MODULE_REGISTER(dosing, LOG_LEVEL_INF);
 #define PUMP_COUNT 4
 #define MIN_DURATION_S 1
 #define MAX_DURATION_S 3600
-#define MIN_DUTY 51
 #define MAX_DUTY 254
 
 struct pump_state {
@@ -110,10 +109,8 @@ int dosing_start(uint8_t idx, uint16_t duration_s, uint8_t duty, enum pump_dir d
 		duration_s = MAX_DURATION_S;
 	}
 
-	/* Clamp duty to [51, 254], or 0 to stop */
-	if (duty > 0 && duty < MIN_DUTY) {
-		duty = 0;  /* Stop if duty is below threshold */
-	} else if (duty > MAX_DUTY) {
+	/* Duty 1-254 all run (pump_pwm maps onto 50-100%); 0 stops/pauses */
+	if (duty > MAX_DUTY) {
 		duty = MAX_DUTY;
 	}
 
