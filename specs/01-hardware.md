@@ -25,6 +25,7 @@ All pins are PWM-capable (nRF52840 PWM peripherals route to any GPIO). One nRF P
   ```
 - Silkscreen D-labels on clones may not match nice!nano; wire by nRF port/pin (table above), not by D-label.
 - USB power goes through VDDH; an erased UICR leaves REGOUT0 at 1.8 V (GPIO highs too low for L298N). Firmware programs REGOUT0 to 3.3 V on first boot and resets. A full-chip erase (`tools/test-flash.sh` without `--no-erase`) wipes UICR, so expect one extra self-reset on the first boot after.
+- **No 32.768 kHz crystal** on these clones. The LFCLK must be the internal RC with calibration (`CONFIG_CLOCK_CONTROL_NRF_K32SRC_RC=y` in prj.conf). Building with the DK default (XTAL) appears to work, then MPSL asserts (107) minutes after boot and the radio dies until reset.
 
 ## Drive scheme (L298N-mini, IN1/IN2 driven directly)
 
