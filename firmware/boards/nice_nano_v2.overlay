@@ -3,28 +3,28 @@
 		compatible = "pwm-leds";
 
 		pump1a: pump1a {
-			pwms = <&pwm0 0 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm0 0 PWM_USEC(250) PWM_POLARITY_NORMAL>;
 		};
 		pump1b: pump1b {
-			pwms = <&pwm1 0 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm1 0 PWM_USEC(250) PWM_POLARITY_NORMAL>;
 		};
 		pump2a: pump2a {
-			pwms = <&pwm0 1 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm0 1 PWM_USEC(250) PWM_POLARITY_NORMAL>;
 		};
 		pump2b: pump2b {
-			pwms = <&pwm1 1 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm1 1 PWM_USEC(250) PWM_POLARITY_NORMAL>;
 		};
 		pump3a: pump3a {
-			pwms = <&pwm0 2 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm0 2 PWM_USEC(250) PWM_POLARITY_NORMAL>;
 		};
 		pump3b: pump3b {
-			pwms = <&pwm1 2 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm1 2 PWM_USEC(250) PWM_POLARITY_NORMAL>;
 		};
 		pump4a: pump4a {
-			pwms = <&pwm0 3 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm0 3 PWM_USEC(250) PWM_POLARITY_NORMAL>;
 		};
 		pump4b: pump4b {
-			pwms = <&pwm1 3 PWM_USEC(50) PWM_POLARITY_NORMAL>;
+			pwms = <&pwm1 3 PWM_USEC(250) PWM_POLARITY_NORMAL>;
 		};
 	};
 };

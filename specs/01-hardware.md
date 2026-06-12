@@ -34,7 +34,7 @@ All pins are PWM-capable (nRF52840 PWM peripherals route to any GPIO). One nRF P
 | Reverse | low          | PWM (duty=speed) |
 | Stop    | low          | low (coast)  |
 
-- PWM frequency: **20 kHz** (period 50 µs) — above audible range.
+- PWM frequency: **4 kHz** (period 250 µs). The L298N's darlington outputs switch in ~2–4 µs; above ~10 kHz the switching transients dominate the period and the motor sees near-full voltage at any duty (observed: speed control ineffective at 20 kHz). 4 kHz keeps duty linear with acceptable switching losses; audible whine is acceptable for this application.
 - Duty: 0–100% mapped from Zigbee level 0–254. Enforce a minimum running duty of 20% (below that, stop) so motors don't stall-hum.
 - Never PWM both pins at once. Transition through Stop when reversing direction (≥50 ms dead time).
 
