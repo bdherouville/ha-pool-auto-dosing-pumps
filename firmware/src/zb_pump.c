@@ -385,25 +385,46 @@ ZB_AF_SIMPLE_DESC_TYPE(4, 0) pump_ep4_simple_desc = {
  * ============================================================================
  */
 
+/* Per-endpoint contexts required by ZBOSS:
+ * - reporting slots: OnOff, CurrentLevel + 3 reportable custom attrs
+ * - CVC slot: Level Control Move-to-Level transition engine (1 per EP) */
+#define PUMP_EP_REPORT_ATTR_COUNT 6
+
+ZBOSS_DEVICE_DECLARE_REPORTING_CTX(pump_ep1_reporting_info, PUMP_EP_REPORT_ATTR_COUNT);
+ZBOSS_DEVICE_DECLARE_LEVEL_CONTROL_CTX(pump_ep1_cvc_alarm_info, 1);
 ZB_AF_DECLARE_ENDPOINT_DESC(pump_ep1, PUMP_EP1, PUMP_PROFILE_ID, 0, NULL,
 	ZB_ZCL_ARRAY_SIZE(pump_ep1_clusters, zb_zcl_cluster_desc_t),
 	pump_ep1_clusters,
-	(zb_af_simple_desc_1_1_t *)&pump_ep1_simple_desc, 0, NULL, 0, NULL);
+	(zb_af_simple_desc_1_1_t *)&pump_ep1_simple_desc,
+	PUMP_EP_REPORT_ATTR_COUNT, pump_ep1_reporting_info,
+	1, pump_ep1_cvc_alarm_info);
 
+ZBOSS_DEVICE_DECLARE_REPORTING_CTX(pump_ep2_reporting_info, PUMP_EP_REPORT_ATTR_COUNT);
+ZBOSS_DEVICE_DECLARE_LEVEL_CONTROL_CTX(pump_ep2_cvc_alarm_info, 1);
 ZB_AF_DECLARE_ENDPOINT_DESC(pump_ep2, PUMP_EP2, PUMP_PROFILE_ID, 0, NULL,
 	ZB_ZCL_ARRAY_SIZE(pump_ep2_clusters, zb_zcl_cluster_desc_t),
 	pump_ep2_clusters,
-	(zb_af_simple_desc_1_1_t *)&pump_ep2_simple_desc, 0, NULL, 0, NULL);
+	(zb_af_simple_desc_1_1_t *)&pump_ep2_simple_desc,
+	PUMP_EP_REPORT_ATTR_COUNT, pump_ep2_reporting_info,
+	1, pump_ep2_cvc_alarm_info);
 
+ZBOSS_DEVICE_DECLARE_REPORTING_CTX(pump_ep3_reporting_info, PUMP_EP_REPORT_ATTR_COUNT);
+ZBOSS_DEVICE_DECLARE_LEVEL_CONTROL_CTX(pump_ep3_cvc_alarm_info, 1);
 ZB_AF_DECLARE_ENDPOINT_DESC(pump_ep3, PUMP_EP3, PUMP_PROFILE_ID, 0, NULL,
 	ZB_ZCL_ARRAY_SIZE(pump_ep3_clusters, zb_zcl_cluster_desc_t),
 	pump_ep3_clusters,
-	(zb_af_simple_desc_1_1_t *)&pump_ep3_simple_desc, 0, NULL, 0, NULL);
+	(zb_af_simple_desc_1_1_t *)&pump_ep3_simple_desc,
+	PUMP_EP_REPORT_ATTR_COUNT, pump_ep3_reporting_info,
+	1, pump_ep3_cvc_alarm_info);
 
+ZBOSS_DEVICE_DECLARE_REPORTING_CTX(pump_ep4_reporting_info, PUMP_EP_REPORT_ATTR_COUNT);
+ZBOSS_DEVICE_DECLARE_LEVEL_CONTROL_CTX(pump_ep4_cvc_alarm_info, 1);
 ZB_AF_DECLARE_ENDPOINT_DESC(pump_ep4, PUMP_EP4, PUMP_PROFILE_ID, 0, NULL,
 	ZB_ZCL_ARRAY_SIZE(pump_ep4_clusters, zb_zcl_cluster_desc_t),
 	pump_ep4_clusters,
-	(zb_af_simple_desc_1_1_t *)&pump_ep4_simple_desc, 0, NULL, 0, NULL);
+	(zb_af_simple_desc_1_1_t *)&pump_ep4_simple_desc,
+	PUMP_EP_REPORT_ATTR_COUNT, pump_ep4_reporting_info,
+	1, pump_ep4_cvc_alarm_info);
 
 /* Device context with 4 endpoints */
 ZBOSS_DECLARE_DEVICE_CTX_4_EP(pump_device_ctx, pump_ep1, pump_ep2, pump_ep3, pump_ep4);
@@ -553,6 +574,9 @@ static void zcl_device_cb(zb_bufid_t bufid)
 	uint8_t pump_idx = ep_to_pump_idx(ep);
 
 	device_cb_param->status = RET_OK;
+
+	LOG_DBG("zcl_device_cb: id=%d ep=%d cluster=0x%04x attr=0x%04x",
+		device_cb_param->device_cb_id, ep, cluster_id, attr_id);
 
 	switch (device_cb_param->device_cb_id) {
 	case ZB_ZCL_SET_ATTR_VALUE_CB_ID:
