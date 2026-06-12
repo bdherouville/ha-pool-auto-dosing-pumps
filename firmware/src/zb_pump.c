@@ -1,6 +1,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
+#include <stdio.h>
 #include <string.h>
 #include <zboss_api.h>
 #include <zboss_api_addons.h>

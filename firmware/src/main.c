@@ -5,6 +5,7 @@
 #include <zboss_api_addons.h>
 #include <zb_mem_config_med.h>
 #include <zigbee/zigbee_app_utils.h>
+#include <zb_nrf_platform.h>
 
 #include "pump_pwm.h"
 #include "dosing.h"
